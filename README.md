@@ -32,3 +32,9 @@ s.Persist()
 ```
 go get github.com/donatj/appsettings
 ```
+
+## Documentation
+
+Documentation can be found a godoc:
+
+https://godoc.org/github.com/donatj/appsettings
