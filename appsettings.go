@@ -1,3 +1,4 @@
+// Package appsettings provides simple key/value store functionality
 package appsettings
 
 import (
