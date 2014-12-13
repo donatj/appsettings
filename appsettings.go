@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strconv"
 )
@@ -23,7 +22,6 @@ type appsettings struct {
 func NewAppSettings(dbFilename string) (*appsettings, error) {
 	var data dataStruct
 	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
-		log.Printf("no such file or directory: %s", dbFilename)
 		data = dataStruct{}
 
 		d1, _ := json.Marshal(data)
@@ -34,7 +32,6 @@ func NewAppSettings(dbFilename string) (*appsettings, error) {
 	} else {
 		d1, err := ioutil.ReadFile(dbFilename)
 		if err != nil {
-			log.Println(err)
 			return nil, err
 		}
 		json.Unmarshal(d1, &data)
