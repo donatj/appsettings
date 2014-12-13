@@ -14,12 +14,12 @@ type dataStruct struct {
 	Tree map[string]DataTree
 }
 
-type appsettings struct {
+type AppSettings struct {
 	filename string
 	data     dataStruct
 }
 
-func NewAppSettings(dbFilename string) (*appsettings, error) {
+func NewAppSettings(dbFilename string) (*AppSettings, error) {
 	var data dataStruct
 	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
 		data = dataStruct{
@@ -43,7 +43,7 @@ func NewAppSettings(dbFilename string) (*appsettings, error) {
 		}
 	}
 
-	return &appsettings{filename: dbFilename, data: data}, nil
+	return &AppSettings{filename: dbFilename, data: data}, nil
 }
 
 func (a *DataTree) GetString(key string) (string, error) {
@@ -78,7 +78,7 @@ func (a *DataTree) SetInt(key string, val int) {
 	y[key] = strconv.Itoa(val)
 }
 
-func (a *appsettings) GetTree(key string) DataTree {
+func (a *AppSettings) GetTree(key string) DataTree {
 	if _, ok := a.data.Tree[key]; !ok {
 		a.data.Tree[key] = make(DataTree)
 	}
@@ -86,7 +86,7 @@ func (a *appsettings) GetTree(key string) DataTree {
 	return a.data.Tree[key]
 }
 
-func (a *appsettings) Persist() error {
+func (a *AppSettings) Persist() error {
 	d1, _ := json.Marshal(a.data)
 	err := ioutil.WriteFile(a.filename, d1, 0644)
 	if err != nil {
