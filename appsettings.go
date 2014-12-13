@@ -22,7 +22,9 @@ type appsettings struct {
 func NewAppSettings(dbFilename string) (*appsettings, error) {
 	var data dataStruct
 	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
-		data = dataStruct{}
+		data = dataStruct{
+			Tree: make(map[string]dataTree),
+		}
 
 		d1, _ := json.Marshal(data)
 		err := ioutil.WriteFile(dbFilename, d1, 0644)
