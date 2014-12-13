@@ -8,10 +8,10 @@ import (
 	"strconv"
 )
 
-type dataTree map[string]string
+type DataTree map[string]string
 
 type dataStruct struct {
-	Tree map[string]dataTree
+	Tree map[string]DataTree
 }
 
 type appsettings struct {
@@ -23,7 +23,7 @@ func NewAppSettings(dbFilename string) (*appsettings, error) {
 	var data dataStruct
 	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
 		data = dataStruct{
-			Tree: make(map[string]dataTree),
+			Tree: make(map[string]DataTree),
 		}
 
 		d1, _ := json.Marshal(data)
@@ -46,7 +46,7 @@ func NewAppSettings(dbFilename string) (*appsettings, error) {
 	return &appsettings{filename: dbFilename, data: data}, nil
 }
 
-func (a *dataTree) GetString(key string) (string, error) {
+func (a *DataTree) GetString(key string) (string, error) {
 	y := *a
 	if _, ok := y[key]; !ok {
 		return "", fmt.Errorf("Undefined key %s", key)
@@ -55,12 +55,12 @@ func (a *dataTree) GetString(key string) (string, error) {
 	return y[key], nil
 }
 
-func (a *dataTree) SetString(key string, val string) {
+func (a *DataTree) SetString(key string, val string) {
 	y := *a
 	y[key] = val
 }
 
-func (a *dataTree) GetInt(key string) (int, error) {
+func (a *DataTree) GetInt(key string) (int, error) {
 	str, err := a.GetString(key)
 	if err != nil {
 		return 0, err
@@ -73,14 +73,14 @@ func (a *dataTree) GetInt(key string) (int, error) {
 	return i, nil
 }
 
-func (a *dataTree) SetInt(key string, val int) {
+func (a *DataTree) SetInt(key string, val int) {
 	y := *a
 	y[key] = strconv.Itoa(val)
 }
 
-func (a *appsettings) GetTree(key string) dataTree {
+func (a *appsettings) GetTree(key string) DataTree {
 	if _, ok := a.data.Tree[key]; !ok {
-		a.data.Tree[key] = make(dataTree)
+		a.data.Tree[key] = make(DataTree)
 	}
 
 	return a.data.Tree[key]
