@@ -49,7 +49,7 @@ func NewAppSettings(dbFilename string) (*AppSettings, error) {
 func (a *DataTree) GetString(key string) (string, error) {
 	y := *a
 	if _, ok := y[key]; !ok {
-		return "", fmt.Errorf("Undefined key %s", key)
+		return "", fmt.Errorf("undefined key %s", key)
 	}
 
 	return y[key], nil
