@@ -79,6 +79,24 @@ func (a *DataTree) SetInt(key string, val int) {
 	y[key] = strconv.Itoa(val)
 }
 
+func (a *DataTree) GetInt64(key string) (int64, error) {
+	str, err := a.GetString(key)
+	if err != nil {
+		return 0, err
+	}
+
+	i, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return i, nil
+}
+
+func (a *DataTree) SetInt64(key string, val int64) {
+	y := *a
+	y[key] = strconv.FormatInt(val, 10)
+}
+
 func (a *AppSettings) GetTree(key string) DataTree {
 	if _, ok := a.data.Tree[key]; !ok {
 		a.data.Tree[key] = make(DataTree)
