@@ -97,6 +97,10 @@ func (a *DataTree) SetInt64(key string, val int64) {
 	y[key] = strconv.FormatInt(val, 10)
 }
 
+func (a *DataTree) Delete(key string) {
+	delete(*a, key)
+}
+
 func (a *AppSettings) GetTree(key string) DataTree {
 	if _, ok := a.data.Tree[key]; !ok {
 		a.data.Tree[key] = make(DataTree)
