@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"sync"
 )
 
 type DataTree map[string]string
@@ -18,6 +19,8 @@ type dataStruct struct {
 type AppSettings struct {
 	filename string
 	data     dataStruct
+
+	sync.Mutex
 }
 
 func NewAppSettings(dbFilename string) (*AppSettings, error) {
@@ -37,8 +40,8 @@ func NewAppSettings(dbFilename string) (*AppSettings, error) {
 		if err != nil {
 			return nil, err
 		}
-		json.Unmarshal(d1, &data)
 
+		err = json.Unmarshal(d1, &data)
 		if err != nil {
 			return nil, err
 		}
@@ -102,6 +105,9 @@ func (a *DataTree) Delete(key string) {
 }
 
 func (a *AppSettings) GetTree(key string) DataTree {
+	a.Lock()
+	defer a.Unlock()
+
 	if _, ok := a.data.Tree[key]; !ok {
 		a.data.Tree[key] = make(DataTree)
 	}
@@ -109,7 +115,11 @@ func (a *AppSettings) GetTree(key string) DataTree {
 	return a.data.Tree[key]
 }
 
+// Persist causes the current state of the app settings to be persisted.
 func (a *AppSettings) Persist() error {
+	a.Lock()
+	defer a.Unlock()
+
 	d1, _ := json.Marshal(a.data)
 	err := ioutil.WriteFile(a.filename, d1, 0644)
 	if err != nil {
