@@ -30,7 +30,7 @@ s.Persist()
 ## Installation
 
 ```
-go get github.com/donatj/appsettings
+go get -u -v github.com/donatj/appsettings
 ```
 
 ## Documentation
