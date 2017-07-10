@@ -91,9 +91,6 @@ func (a *tree) SetString(key string, val string) {
 }
 
 func (a *tree) GetInt(key string) (int, error) {
-	a.Lock()
-	defer a.Unlock()
-
 	str, err := a.GetString(key)
 	if err != nil {
 		return 0, err
@@ -114,9 +111,6 @@ func (a *tree) SetInt(key string, val int) {
 }
 
 func (a *tree) GetInt64(key string) (int64, error) {
-	a.Lock()
-	defer a.Unlock()
-
 	str, err := a.GetString(key)
 	if err != nil {
 		return 0, err
