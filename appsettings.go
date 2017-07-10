@@ -3,34 +3,53 @@ package appsettings
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"sync"
 )
 
-type DataTree map[string]string
+// DataTree is the host of key and branches of values
+type DataTree interface {
+	GetString(key string) (string, error)
+	SetString(key string, val string)
+	GetInt(key string) (int, error)
+	SetInt(key string, val int)
+	GetInt64(key string) (int64, error)
+	SetInt64(key string, val int64)
+	Delete(key string)
+	GetTree(key string) DataTree
 
-type dataStruct struct {
-	Tree map[string]DataTree
+	GetLeaves() map[string]string
 }
 
-type AppSettings struct {
-	filename string
-	data     dataStruct
+type tree struct {
+	Branches map[string]*tree
+	Leaves   map[string]string
 
 	sync.Mutex
 }
 
-func NewAppSettings(dbFilename string) (*AppSettings, error) {
-	var data dataStruct
-	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
-		data = dataStruct{
-			Tree: make(map[string]DataTree),
-		}
+// AppSettings is the root most DataTree
+type AppSettings struct {
+	filename string
 
-		d1, _ := json.Marshal(data)
+	*tree
+}
+
+// NewAppSettings gets a new AppSettings struct
+func NewAppSettings(dbFilename string) (*AppSettings, error) {
+	a := &AppSettings{
+		filename: dbFilename,
+		tree: &tree{
+			Branches: make(map[string]*tree),
+			Leaves:   make(map[string]string),
+		},
+	}
+
+	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
+		d1, _ := json.Marshal(a)
 		err := ioutil.WriteFile(dbFilename, d1, 0644)
 		if err != nil {
 			return nil, err
@@ -41,30 +60,31 @@ func NewAppSettings(dbFilename string) (*AppSettings, error) {
 			return nil, err
 		}
 
-		err = json.Unmarshal(d1, &data)
+		err = json.Unmarshal(d1, a)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return &AppSettings{filename: dbFilename, data: data}, nil
+	return a, nil
 }
 
-func (a *DataTree) GetString(key string) (string, error) {
-	y := *a
-	if _, ok := y[key]; !ok {
-		return "", fmt.Errorf("undefined key %s", key)
+// ErrUndefinedKey is returned when the key requested from get is undefined.
+var ErrUndefinedKey = errors.New("undefined key")
+
+func (a *tree) GetString(key string) (string, error) {
+	if _, ok := a.Leaves[key]; !ok {
+		return "", ErrUndefinedKey
 	}
 
-	return y[key], nil
+	return a.Leaves[key], nil
 }
 
-func (a *DataTree) SetString(key string, val string) {
-	y := *a
-	y[key] = val
+func (a *tree) SetString(key string, val string) {
+	a.Leaves[key] = val
 }
 
-func (a *DataTree) GetInt(key string) (int, error) {
+func (a *tree) GetInt(key string) (int, error) {
 	str, err := a.GetString(key)
 	if err != nil {
 		return 0, err
@@ -77,12 +97,11 @@ func (a *DataTree) GetInt(key string) (int, error) {
 	return i, nil
 }
 
-func (a *DataTree) SetInt(key string, val int) {
-	y := *a
-	y[key] = strconv.Itoa(val)
+func (a *tree) SetInt(key string, val int) {
+	a.Leaves[key] = strconv.Itoa(val)
 }
 
-func (a *DataTree) GetInt64(key string) (int64, error) {
+func (a *tree) GetInt64(key string) (int64, error) {
 	str, err := a.GetString(key)
 	if err != nil {
 		return 0, err
@@ -95,24 +114,32 @@ func (a *DataTree) GetInt64(key string) (int64, error) {
 	return i, nil
 }
 
-func (a *DataTree) SetInt64(key string, val int64) {
-	y := *a
-	y[key] = strconv.FormatInt(val, 10)
+func (a *tree) SetInt64(key string, val int64) {
+	// y := *a
+	a.Leaves[key] = strconv.FormatInt(val, 10)
 }
 
-func (a *DataTree) Delete(key string) {
-	delete(*a, key)
+func (a *tree) Delete(key string) {
+	delete(a.Leaves, key)
 }
 
-func (a *AppSettings) GetTree(key string) DataTree {
-	a.Lock()
-	defer a.Unlock()
+func (a *tree) GetLeaves() map[string]string {
+	return a.Leaves
+}
 
-	if _, ok := a.data.Tree[key]; !ok {
-		a.data.Tree[key] = make(DataTree)
+// GetTree fetches a tree for app setting storage
+func (a *tree) GetTree(key string) DataTree {
+	// a.Lock()
+	// defer a.Unlock()
+
+	if _, ok := a.Branches[key]; !ok {
+		a.Branches[key] = &tree{
+			Branches: make(map[string]*tree),
+			Leaves:   make(map[string]string),
+		}
 	}
 
-	return a.data.Tree[key]
+	return a.Branches[key]
 }
 
 // Persist causes the current state of the app settings to be persisted.
@@ -120,7 +147,7 @@ func (a *AppSettings) Persist() error {
 	a.Lock()
 	defer a.Unlock()
 
-	d1, _ := json.Marshal(a.data)
+	d1, _ := json.Marshal(a)
 	err := ioutil.WriteFile(a.filename, d1, 0644)
 	if err != nil {
 		return err
