@@ -2,7 +2,7 @@
 
 [![GoDoc](https://godoc.org/github.com/donatj/appsettings?status.svg)](https://godoc.org/github.com/donatj/appsettings)
 
-A dead simple key value store for persisting simple runtime options in Go applications.
+A hierarchical key value store for persisting simple runtime options in Go applications.
 
 ## Example
 
