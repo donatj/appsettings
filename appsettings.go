@@ -167,8 +167,12 @@ func (a *AppSettings) Persist() error {
 	a.Lock()
 	defer a.Unlock()
 
-	d1, _ := json.Marshal(a)
-	err := ioutil.WriteFile(a.filename, d1, 0644)
+	d1, err := json.Marshal(a)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(a.filename, d1, 0644)
 	if err != nil {
 		return err
 	}
