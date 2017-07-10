@@ -73,6 +73,9 @@ func NewAppSettings(dbFilename string) (*AppSettings, error) {
 var ErrUndefinedKey = errors.New("undefined key")
 
 func (a *tree) GetString(key string) (string, error) {
+	a.Lock()
+	defer a.Unlock()
+
 	if _, ok := a.Leaves[key]; !ok {
 		return "", ErrUndefinedKey
 	}
@@ -81,10 +84,16 @@ func (a *tree) GetString(key string) (string, error) {
 }
 
 func (a *tree) SetString(key string, val string) {
+	a.Lock()
+	defer a.Unlock()
+
 	a.Leaves[key] = val
 }
 
 func (a *tree) GetInt(key string) (int, error) {
+	a.Lock()
+	defer a.Unlock()
+
 	str, err := a.GetString(key)
 	if err != nil {
 		return 0, err
@@ -98,10 +107,16 @@ func (a *tree) GetInt(key string) (int, error) {
 }
 
 func (a *tree) SetInt(key string, val int) {
+	a.Lock()
+	defer a.Unlock()
+
 	a.Leaves[key] = strconv.Itoa(val)
 }
 
 func (a *tree) GetInt64(key string) (int64, error) {
+	a.Lock()
+	defer a.Unlock()
+
 	str, err := a.GetString(key)
 	if err != nil {
 		return 0, err
@@ -115,11 +130,16 @@ func (a *tree) GetInt64(key string) (int64, error) {
 }
 
 func (a *tree) SetInt64(key string, val int64) {
-	// y := *a
+	a.Lock()
+	defer a.Unlock()
+
 	a.Leaves[key] = strconv.FormatInt(val, 10)
 }
 
 func (a *tree) Delete(key string) {
+	a.Lock()
+	defer a.Unlock()
+
 	delete(a.Leaves, key)
 }
 
@@ -129,8 +149,8 @@ func (a *tree) GetLeaves() map[string]string {
 
 // GetTree fetches a tree for app setting storage
 func (a *tree) GetTree(key string) DataTree {
-	// a.Lock()
-	// defer a.Unlock()
+	a.Lock()
+	defer a.Unlock()
 
 	if _, ok := a.Branches[key]; !ok {
 		a.Branches[key] = &tree{
