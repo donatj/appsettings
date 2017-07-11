@@ -38,7 +38,7 @@ go get -u -v github.com/donatj/appsettings
 The JSON format for the early Alpha changed. To migrate your existing data compatibly to the more modern format, you can use [jq](https://stedolan.github.io/jq/) and execute the following command, first replacing `{your-file}` with the path to your actual database file.
 
 ```bash
-jq '.Tree |= with_entries(.value = { Leaves: .value} ) | . + {"Branches": .Tree} | del(.Tree)' < {your-file} > tmp && mv tmp {your-fie}
+jq '.Tree |= with_entries(.value = {Leaves: .value} ) | . + {Branches: .Tree} | del(.Tree)' < {your-file} > tmp && mv tmp {your-fie}
 ```
 
 ## Documentation
