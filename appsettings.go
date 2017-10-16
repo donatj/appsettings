@@ -19,8 +19,10 @@ type DataTree interface {
 	GetInt64(key string) (int64, error)
 	SetInt64(key string, val int64)
 	Delete(key string)
+	DeleteTree(key string)
 	GetTree(key string) DataTree
 
+	GetTrees() map[string]*tree
 	GetLeaves() map[string]string
 }
 
@@ -137,8 +139,19 @@ func (a *tree) Delete(key string) {
 	delete(a.Leaves, key)
 }
 
+func (a *tree) DeleteTree(key string) {
+	a.Lock()
+	defer a.Unlock()
+
+	delete(a.Branches, key)
+}
+
 func (a *tree) GetLeaves() map[string]string {
 	return a.Leaves
+}
+
+func (a *tree) GetTrees() map[string]*tree {
+	return a.Branches
 }
 
 // GetTree fetches a tree for app setting storage
