@@ -18,7 +18,7 @@ func (*setCmd) Name() string     { return "set" }
 func (*setCmd) Synopsis() string { return "Set a keys value." }
 func (*setCmd) Usage() string {
 	return `set [[<key>, <value>]...]:
-	Print args to stdout.
+	Set a keys value.
   `
 }
 

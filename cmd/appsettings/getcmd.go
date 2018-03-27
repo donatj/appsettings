@@ -18,7 +18,7 @@ func (*getCmd) Name() string     { return "get" }
 func (*getCmd) Synopsis() string { return "Print key value to stdout." }
 func (*getCmd) Usage() string {
 	return `get [-capitalize] <some text>:
-	Print args to stdout.
+	Print key value to stdout.
   `
 }
 

@@ -15,10 +15,10 @@ type deleteCmd struct {
 }
 
 func (*deleteCmd) Name() string     { return "delete" }
-func (*deleteCmd) Synopsis() string { return "Delete a keys value" }
+func (*deleteCmd) Synopsis() string { return "Delete a key." }
 func (*deleteCmd) Usage() string {
 	return `delete [<key>...]:
-	Print args to stdout.
+	Delete a key.
   `
 }
 
