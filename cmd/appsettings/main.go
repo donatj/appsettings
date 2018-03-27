@@ -11,17 +11,27 @@ import (
 )
 
 func main() {
-	x, err := appsettings.NewAppSettings("appsettings.json")
+	cget := &getCmd{}
+	cset := &setCmd{}
+	cdelete := &deleteCmd{}
+
+	subcommands.Register(cget, "")
+	subcommands.Register(cset, "")
+	subcommands.Register(cdelete, "")
+
+	f := flag.String("file", "appsettings.json", "Appsetting Database to Query")
+
+	flag.Parse()
+
+	settings, err := appsettings.NewAppSettings(*f)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	subcommands.Register(&getCmd{settings: x}, "")
-	subcommands.Register(&setCmd{settings: x}, "")
-	subcommands.Register(&deleteCmd{settings: x}, "")
+	cget.settings = settings
+	cset.settings = settings
+	cdelete.settings = settings
 
-	flag.Parse()
 	ctx := context.Background()
 	os.Exit(int(subcommands.Execute(ctx)))
-
 }
