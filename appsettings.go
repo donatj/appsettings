@@ -75,6 +75,9 @@ func NewAppSettings(dbFilename string) (*AppSettings, error) {
 // ErrUndefinedKey is returned when the key requested from get is undefined.
 var ErrUndefinedKey = errors.New("undefined key")
 
+// GetString gets the give keys leaf as a string.
+//
+// Returns an ErrUndefinedKey if the key is not defined
 func (a *tree) GetString(key string) (string, error) {
 	a.Lock()
 	defer a.Unlock()
@@ -86,6 +89,7 @@ func (a *tree) GetString(key string) (string, error) {
 	return a.Leaves[key], nil
 }
 
+// SetString sets the give key leaf as a string.
 func (a *tree) SetString(key string, val string) {
 	a.Lock()
 	defer a.Unlock()
@@ -93,6 +97,11 @@ func (a *tree) SetString(key string, val string) {
 	a.Leaves[key] = val
 }
 
+// GetInt gets the give keys leaf as an int.
+//
+// Returns an ErrUndefinedKey if the key is not defined.
+//
+// Will return an error if ParseInt of the value of the leaf fails.
 func (a *tree) GetInt(key string) (int, error) {
 	str, err := a.GetString(key)
 	if err != nil {
@@ -106,6 +115,7 @@ func (a *tree) GetInt(key string) (int, error) {
 	return i, nil
 }
 
+// SetInt sets the give key leaf as a int.
 func (a *tree) SetInt(key string, val int) {
 	a.Lock()
 	defer a.Unlock()
@@ -113,6 +123,11 @@ func (a *tree) SetInt(key string, val int) {
 	a.Leaves[key] = strconv.Itoa(val)
 }
 
+// GetInt64 gets the give keys leaf as an int64.
+//
+// Returns an ErrUndefinedKey if the key is not defined.
+//
+// Will return an error if ParseInt(...,10, 64) of the value of the leaf fails.
 func (a *tree) GetInt64(key string) (int64, error) {
 	str, err := a.GetString(key)
 	if err != nil {
@@ -126,6 +141,7 @@ func (a *tree) GetInt64(key string) (int64, error) {
 	return i, nil
 }
 
+// SetInt64 sets the give key leaf as a int64.
 func (a *tree) SetInt64(key string, val int64) {
 	a.Lock()
 	defer a.Unlock()
@@ -133,6 +149,7 @@ func (a *tree) SetInt64(key string, val int64) {
 	a.Leaves[key] = strconv.FormatInt(val, 10)
 }
 
+// Delete removes the given leaf from the branch.
 func (a *tree) Delete(key string) {
 	a.Lock()
 	defer a.Unlock()
@@ -140,6 +157,7 @@ func (a *tree) Delete(key string) {
 	delete(a.Leaves, key)
 }
 
+// Delete removes the given tree from the branch.
 func (a *tree) DeleteTree(key string) {
 	a.Lock()
 	defer a.Unlock()
