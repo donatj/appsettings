@@ -1,4 +1,5 @@
-// Package appsettings provides simple key/value store functionality
+// Package appsettings provides simple key/value store functionality designed
+// to be used for easily storing and recalling application runtime settings
 package appsettings
 
 import (
