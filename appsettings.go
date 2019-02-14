@@ -23,6 +23,9 @@ type DataTree interface {
 	DeleteTree(key string)
 	GetTree(key string) DataTree
 
+	HasTree(key string) bool
+	HasLeaf(key string) bool
+
 	GetTrees() map[string]*tree
 	GetLeaves() map[string]string
 }
