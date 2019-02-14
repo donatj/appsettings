@@ -188,6 +188,24 @@ func (a *tree) GetTree(key string) DataTree {
 	return a.Branches[key]
 }
 
+// HasTree checks if the given key is defined as a tree
+func (a *tree) HasTree(key string) bool {
+	a.Lock()
+	defer a.Unlock()
+
+	_, ok := a.Branches[key]
+	return ok
+}
+
+// HasTree checks if the given key is defined as a leaf value
+func (a *tree) HasLeaf(key string) bool {
+	a.Lock()
+	defer a.Unlock()
+
+	_, ok := a.Leaves[key]
+	return ok
+}
+
 // Persist causes the current state of the app settings to be persisted.
 func (a *AppSettings) Persist() error {
 	a.Lock()
