@@ -1,5 +1,6 @@
 # AppSettings
 
+[![Build Status](https://travis-ci.org/donatj/appsettings.svg?branch=master)](https://travis-ci.org/donatj/appsettings)
 [![GoDoc](https://godoc.org/github.com/donatj/appsettings?status.svg)](https://godoc.org/github.com/donatj/appsettings)
 
 A hierarchical key value store for persisting simple runtime options in Go applications.
