@@ -40,18 +40,33 @@ type tree struct {
 // AppSettings is the root most DataTree
 type AppSettings struct {
 	filename string
+	pretty   bool
 
 	*tree
 }
 
+// Option sets an option of the passed JqMux
+type Option func(*AppSettings)
+
+// OptionPrettyPrint configures AppSettings to pretty print the saved json
+func OptionPrettyPrint(app *AppSettings) {
+	app.pretty = true
+}
+
 // NewAppSettings gets a new AppSettings struct
-func NewAppSettings(dbFilename string) (*AppSettings, error) {
+func NewAppSettings(dbFilename string, options ...Option) (*AppSettings, error) {
 	a := &AppSettings{
 		filename: dbFilename,
+		pretty:   false,
+
 		tree: &tree{
 			Branches: make(map[string]*tree),
 			Leaves:   make(map[string]string),
 		},
+	}
+
+	for _, option := range options {
+		option(a)
 	}
 
 	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
@@ -214,7 +229,14 @@ func (a *AppSettings) Persist() error {
 	a.Lock()
 	defer a.Unlock()
 
-	d1, err := json.Marshal(a)
+	var err error
+	var d1 []byte
+
+	if a.pretty {
+		d1, err = json.MarshalIndent(a, "", "\t")
+	} else {
+		d1, err = json.Marshal(a)
+	}
 	if err != nil {
 		return err
 	}
