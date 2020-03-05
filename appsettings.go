@@ -45,7 +45,7 @@ type AppSettings struct {
 	*tree
 }
 
-// Option sets an option of the passed JqMux
+// Option sets an option of the passed AppSettings
 type Option func(*AppSettings)
 
 // OptionPrettyPrint configures AppSettings to pretty print the saved json
