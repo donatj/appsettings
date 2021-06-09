@@ -19,7 +19,7 @@ func (*getCmd) Synopsis() string { return "Print key value to stdout." }
 func (*getCmd) Usage() string {
 	return `get [-capitalize] <some text>:
 	Print key value to stdout.
-  `
+`
 }
 
 func (p *getCmd) SetFlags(f *flag.FlagSet) {}

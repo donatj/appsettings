@@ -19,7 +19,7 @@ func (*setCmd) Synopsis() string { return "Set a keys value." }
 func (*setCmd) Usage() string {
 	return `set [[<key>, <value>]...]:
 	Set a keys value.
-  `
+`
 }
 
 func (p *setCmd) SetFlags(f *flag.FlagSet) {}

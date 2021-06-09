@@ -19,7 +19,7 @@ func (*deleteCmd) Synopsis() string { return "Delete a key." }
 func (*deleteCmd) Usage() string {
 	return `delete [<key>...]:
 	Delete a key.
-  `
+`
 }
 
 func (p *deleteCmd) SetFlags(f *flag.FlagSet) {}
