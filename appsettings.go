@@ -15,10 +15,15 @@ import (
 type DataTree interface {
 	GetString(key string) (string, error)
 	SetString(key string, val string)
+
 	GetInt(key string) (int, error)
 	SetInt(key string, val int)
+
 	GetInt64(key string) (int64, error)
 	SetInt64(key string, val int64)
+	IncrInt64(key string) int64
+	DecrInt64(key string) int64
+
 	Delete(key string)
 	DeleteTree(key string)
 	GetTree(key string) DataTree
@@ -165,6 +170,28 @@ func (a *tree) SetInt64(key string, val int64) {
 	defer a.Unlock()
 
 	a.Leaves[key] = strconv.FormatInt(val, 10)
+}
+
+// IncrInt64 increments an int or int64 leaf and returns the new value as int64.
+//
+// If the key is undefined or non-integer, this will initialize it to 0 and increment it to 1
+func (a *tree) IncrInt64(key string) int64 {
+	v, _ := a.GetInt64(key)
+	v += 1
+	a.SetInt64(key, v)
+
+	return v
+}
+
+// DecrInt64 decrements an int or int64 leaf and returns the new value as int64.
+//
+// If the key is undefined or non-integer, this will initialize it to 0 and decrements it to -1
+func (a *tree) DecrInt64(key string) int64 {
+	v, _ := a.GetInt64(key)
+	v -= 1
+	a.SetInt64(key, v)
+
+	return v
 }
 
 // Delete removes the given leaf from the branch.
