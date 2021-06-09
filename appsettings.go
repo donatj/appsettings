@@ -202,7 +202,7 @@ func (a *tree) Delete(key string) {
 	delete(a.Leaves, key)
 }
 
-// Delete removes the given tree from the branch.
+// DeleteTree removes the given tree from the branch.
 func (a *tree) DeleteTree(key string) {
 	a.Lock()
 	defer a.Unlock()
@@ -242,7 +242,7 @@ func (a *tree) HasTree(key string) bool {
 	return ok
 }
 
-// HasTree checks if the given key is defined as a leaf value
+// HasLeaf checks if the given key is defined as a leaf value
 func (a *tree) HasLeaf(key string) bool {
 	a.Lock()
 	defer a.Unlock()
