@@ -36,7 +36,7 @@ type DataTree interface {
 }
 
 type tree struct {
-	Branches map[string]DataTree
+	Branches map[string]*tree
 	Leaves   map[string]string
 
 	sync.Mutex
@@ -65,7 +65,7 @@ func NewAppSettings(dbFilename string, options ...Option) (*AppSettings, error) 
 		pretty:   false,
 
 		tree: &tree{
-			Branches: make(map[string]DataTree),
+			Branches: make(map[string]*tree),
 			Leaves:   make(map[string]string),
 		},
 	}
@@ -215,7 +215,12 @@ func (a *tree) GetLeaves() map[string]string {
 }
 
 func (a *tree) GetTrees() map[string]DataTree {
-	return a.Branches
+	out := make(map[string]DataTree)
+	for k, b := range a.Branches {
+		out[k] = b
+	}
+
+	return out
 }
 
 // GetTree fetches a tree for app setting storage
@@ -225,7 +230,7 @@ func (a *tree) GetTree(key string) DataTree {
 
 	if _, ok := a.Branches[key]; !ok {
 		a.Branches[key] = &tree{
-			Branches: make(map[string]DataTree),
+			Branches: make(map[string]*tree),
 			Leaves:   make(map[string]string),
 		}
 	}
