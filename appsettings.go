@@ -31,12 +31,12 @@ type DataTree interface {
 	HasTree(key string) bool
 	HasLeaf(key string) bool
 
-	GetTrees() map[string]*tree
+	GetTrees() map[string]DataTree
 	GetLeaves() map[string]string
 }
 
 type tree struct {
-	Branches map[string]*tree
+	Branches map[string]DataTree
 	Leaves   map[string]string
 
 	sync.Mutex
@@ -65,7 +65,7 @@ func NewAppSettings(dbFilename string, options ...Option) (*AppSettings, error) 
 		pretty:   false,
 
 		tree: &tree{
-			Branches: make(map[string]*tree),
+			Branches: make(map[string]DataTree),
 			Leaves:   make(map[string]string),
 		},
 	}
@@ -214,7 +214,7 @@ func (a *tree) GetLeaves() map[string]string {
 	return a.Leaves
 }
 
-func (a *tree) GetTrees() map[string]*tree {
+func (a *tree) GetTrees() map[string]DataTree {
 	return a.Branches
 }
 
@@ -225,7 +225,7 @@ func (a *tree) GetTree(key string) DataTree {
 
 	if _, ok := a.Branches[key]; !ok {
 		a.Branches[key] = &tree{
-			Branches: make(map[string]*tree),
+			Branches: make(map[string]DataTree),
 			Leaves:   make(map[string]string),
 		}
 	}
