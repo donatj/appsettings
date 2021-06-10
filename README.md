@@ -1,6 +1,6 @@
 # AppSettings
 
-[![Build Status](https://travis-ci.org/donatj/appsettings.svg?branch=master)](https://travis-ci.org/donatj/appsettings)
+[![CI](https://github.com/donatj/appsettings/actions/workflows/ci.yml/badge.svg)](https://github.com/donatj/appsettings/actions/workflows/ci.yml)
 [![GoDoc](https://godoc.org/github.com/donatj/appsettings?status.svg)](https://godoc.org/github.com/donatj/appsettings)
 
 A hierarchical key value store for persisting simple runtime options in Go applications.
@@ -30,8 +30,8 @@ s.Persist()
 
 ## Installation
 
-```
-go get -u -v github.com/donatj/appsettings
+```bash
+$ go get -u -v github.com/donatj/appsettings
 ```
 
 ## Migration from v0.0.1
