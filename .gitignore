@@ -1,1 +1,5 @@
 *.json
+
+/test/appsettings
+/test/cfg.json
+/appsettings
