@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"slices"
 	"strconv"
 	"sync"
 )
@@ -46,6 +47,8 @@ type AppSettings struct {
 	filename string
 	pretty   bool
 
+	storage StorageAdapter
+
 	*tree
 }
 
@@ -57,11 +60,20 @@ func OptionPrettyPrint(app *AppSettings) {
 	app.pretty = true
 }
 
+// OptionStorageAdapter sets the storage adapter for the AppSettings
+func OptionStorageAdapter(storage StorageAdapter) Option {
+	return func(app *AppSettings) {
+		app.storage = storage
+	}
+}
+
 // NewAppSettings gets a new AppSettings struct
 func NewAppSettings(dbFilename string, options ...Option) (*AppSettings, error) {
 	a := &AppSettings{
 		filename: dbFilename,
 		pretty:   false,
+
+		storage: NewFileSysPersister(dbFilename),
 
 		tree: &tree{
 			Branches: make(map[string]*tree),
@@ -73,22 +85,16 @@ func NewAppSettings(dbFilename string, options ...Option) (*AppSettings, error) 
 		option(a)
 	}
 
-	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
-		d1, _ := json.Marshal(a)
-		err := os.WriteFile(dbFilename, d1, 0644)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		d1, err := os.ReadFile(dbFilename)
-		if err != nil {
-			return nil, err
-		}
+	data, err := a.storage.Fetch()
+	if errors.Is(err, ErrorEmptyFetch) {
+		return a, nil
+	} else if err != nil {
+		return nil, err
+	}
 
-		err = json.Unmarshal(d1, a)
-		if err != nil {
-			return nil, err
-		}
+	err = json.Unmarshal(data, a)
+	if err != nil {
+		return nil, err
 	}
 
 	return a, nil
@@ -255,6 +261,69 @@ func (a *tree) HasLeaf(key string) bool {
 	return ok
 }
 
+// StorageAdapter is an interface for persisting and fetching serialized app settings
+type StorageAdapter interface {
+	// Fetch retrieves the persisted app settings.
+	// If the result is empty, it will return ErrorEmptyFetch
+	// Any initialization should be done in the Fetch method.
+	Fetch() ([]byte, error)
+	Persist([]byte) error
+}
+
+// FileSystemStorageAdapter is a StorageAdapter that uses the file system to persist and
+// fetch app settings. It is the default StorageAdapter for AppSettings.
+type FileSystemStorageAdapter struct {
+	filename string
+	sync.Mutex
+}
+
+var _ StorageAdapter = &FileSystemStorageAdapter{}
+
+func NewFileSysPersister(filename string) *FileSystemStorageAdapter {
+	return &FileSystemStorageAdapter{filename: filename}
+}
+
+func (f *FileSystemStorageAdapter) Persist(data []byte) error {
+	f.Lock()
+	defer f.Unlock()
+
+	return os.WriteFile(f.filename, data, 0644)
+}
+
+// ErrorEmptyFetch is returned when the fetch result is empty.
+var ErrorEmptyFetch = errors.New("empty fetch result")
+
+// Fetch retrieves the persisted app settings from the file system.
+func (f *FileSystemStorageAdapter) Fetch() ([]byte, error) {
+	f.Lock()
+	defer f.Unlock()
+
+	var empty = []byte("{}")
+
+	_, err := os.Stat(f.filename)
+	if os.IsNotExist(err) {
+		err := f.Persist(empty)
+		if err != nil {
+			return nil, err
+		}
+
+		return empty, ErrorEmptyFetch
+	} else if err != nil {
+		return nil, err
+	}
+
+	data, err := os.ReadFile(f.filename)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) == 0 || slices.Equal(data, empty) {
+		return empty, ErrorEmptyFetch
+	}
+
+	return data, nil
+}
+
 // Persist causes the current state of the app settings to be persisted.
 func (a *AppSettings) Persist() error {
 	a.Lock()
@@ -272,10 +341,5 @@ func (a *AppSettings) Persist() error {
 		return err
 	}
 
-	err = os.WriteFile(a.filename, d1, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return a.storage.Persist(d1)
 }
