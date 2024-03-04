@@ -71,7 +71,7 @@ func NewAppSettings(dbFilename string, options ...Option) (*AppSettings, error) 
 		filename: dbFilename,
 		pretty:   false,
 
-		storage: NewFileSysPersister(dbFilename),
+		storage: NewFileSysPersister(),
 
 		tree: &tree{
 			Branches: make(map[string]*tree),
@@ -83,7 +83,7 @@ func NewAppSettings(dbFilename string, options ...Option) (*AppSettings, error) 
 		option(a)
 	}
 
-	data, err := a.storage.Fetch()
+	data, err := a.storage.Fetch(dbFilename)
 	if errors.Is(err, ErrorEmptyFetch) {
 		return a, nil
 	} else if err != nil {
@@ -257,4 +257,24 @@ func (a *tree) HasLeaf(key string) bool {
 
 	_, ok := a.Leaves[key]
 	return ok
+}
+
+// Persist causes the current state of the app settings to be persisted.
+func (a *AppSettings) Persist() error {
+	a.Lock()
+	defer a.Unlock()
+
+	var err error
+	var d1 []byte
+
+	if a.pretty {
+		d1, err = json.MarshalIndent(a, "", "\t")
+	} else {
+		d1, err = json.Marshal(a)
+	}
+	if err != nil {
+		return err
+	}
+
+	return a.storage.Persist(a.filename, d1)
 }
