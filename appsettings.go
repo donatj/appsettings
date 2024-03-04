@@ -5,7 +5,6 @@ package appsettings
 import (
 	"encoding/json"
 	"errors"
-	"os"
 	"strconv"
 	"sync"
 )
@@ -46,6 +45,8 @@ type AppSettings struct {
 	filename string
 	pretty   bool
 
+	storage StorageAdapter
+
 	*tree
 }
 
@@ -57,11 +58,20 @@ func OptionPrettyPrint(app *AppSettings) {
 	app.pretty = true
 }
 
+// OptionStorageAdapter sets the storage adapter for the AppSettings
+func OptionStorageAdapter(storage StorageAdapter) Option {
+	return func(app *AppSettings) {
+		app.storage = storage
+	}
+}
+
 // NewAppSettings gets a new AppSettings struct
 func NewAppSettings(dbFilename string, options ...Option) (*AppSettings, error) {
 	a := &AppSettings{
 		filename: dbFilename,
 		pretty:   false,
+
+		storage: NewFileSysPersister(),
 
 		tree: &tree{
 			Branches: make(map[string]*tree),
@@ -73,22 +83,16 @@ func NewAppSettings(dbFilename string, options ...Option) (*AppSettings, error) 
 		option(a)
 	}
 
-	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
-		d1, _ := json.Marshal(a)
-		err := os.WriteFile(dbFilename, d1, 0644)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		d1, err := os.ReadFile(dbFilename)
-		if err != nil {
-			return nil, err
-		}
+	data, err := a.storage.Fetch(dbFilename)
+	if errors.Is(err, ErrorEmptyFetch) {
+		return a, nil
+	} else if err != nil {
+		return nil, err
+	}
 
-		err = json.Unmarshal(d1, a)
-		if err != nil {
-			return nil, err
-		}
+	err = json.Unmarshal(data, a)
+	if err != nil {
+		return nil, err
 	}
 
 	return a, nil
@@ -272,10 +276,5 @@ func (a *AppSettings) Persist() error {
 		return err
 	}
 
-	err = os.WriteFile(a.filename, d1, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return a.storage.Persist(a.filename, d1)
 }
