@@ -5,7 +5,6 @@ package appsettings
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"sync"
@@ -76,12 +75,12 @@ func NewAppSettings(dbFilename string, options ...Option) (*AppSettings, error) 
 
 	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
 		d1, _ := json.Marshal(a)
-		err := ioutil.WriteFile(dbFilename, d1, 0644)
+		err := os.WriteFile(dbFilename, d1, 0644)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		d1, err := ioutil.ReadFile(dbFilename)
+		d1, err := os.ReadFile(dbFilename)
 		if err != nil {
 			return nil, err
 		}
@@ -273,7 +272,7 @@ func (a *AppSettings) Persist() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(a.filename, d1, 0644)
+	err = os.WriteFile(a.filename, d1, 0644)
 	if err != nil {
 		return err
 	}
