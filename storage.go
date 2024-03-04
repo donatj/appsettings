@@ -37,6 +37,10 @@ func (f *FileSystemStorageAdapter) Persist(data []byte) error {
 	f.Lock()
 	defer f.Unlock()
 
+	return f.writeFile(data)
+}
+
+func (f *FileSystemStorageAdapter) writeFile(data []byte) error {
 	return os.WriteFile(f.filename, data, 0644)
 }
 
@@ -52,7 +56,7 @@ func (f *FileSystemStorageAdapter) Fetch() ([]byte, error) {
 
 	_, err := os.Stat(f.filename)
 	if os.IsNotExist(err) {
-		err := f.Persist(empty)
+		err := f.writeFile(empty)
 		if err != nil {
 			return nil, err
 		}
