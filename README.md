@@ -28,10 +28,12 @@ if v, err = t.GetString("pizza"); err == nil {
 s.Persist()
 ```
 
-## Installation
+## CLI Tool Installation
+
+### From Source
 
 ```bash
-$ go get -u -v github.com/donatj/appsettings
+$ go install github.com/donatj/appsettings/cmd/appsettings@latest
 ```
 
 ## Migration from v0.0.1
