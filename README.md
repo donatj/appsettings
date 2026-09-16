@@ -1,51 +1,107 @@
-# AppSettings
+# appsettings
 
 [![CI](https://github.com/donatj/appsettings/actions/workflows/ci.yml/badge.svg)](https://github.com/donatj/appsettings/actions/workflows/ci.yml)
-[![GoDoc](https://godoc.org/github.com/donatj/appsettings?status.svg)](https://godoc.org/github.com/donatj/appsettings)
+[![Go Reference](https://pkg.go.dev/badge/github.com/donatj/appsettings.svg)](https://pkg.go.dev/github.com/donatj/appsettings)
 
-A hierarchical key value store for persisting simple runtime options in Go applications.
+`appsettings` is a small Go package for persisting application runtime settings in a JSON-backed, hierarchical key/value store. It is useful when an application needs a little durable local state without defining a separate configuration type for every value.
 
-## Example
+- Organize values into named trees.
+- Store and retrieve strings, `int`s, and `int64`s.
+- Use the included JSON file storage or provide a storage adapter of your own.
+- Manage the same data from a small command-line tool.
+
+## Install
+
+`appsettings` requires Go 1.21 or newer.
+
+```sh
+go get github.com/donatj/appsettings
+```
+
+## Basic usage
+
+Create an `AppSettings` value with a filename, work with a tree, and call `Persist` when the changes should be written. With the default storage adapter, a missing file is created as an empty JSON object.
 
 ```go
-s := appsettings.NewAppSettings("settings.json")
+package main
 
-t := s.GetTree("user-settings")
+import (
+	"errors"
+	"log"
 
-//set
-t.SetString("pizza", "pie")
-t.SetInt("how-many-pugs", 349)
+	"github.com/donatj/appsettings"
+)
 
-//read
-if v, err := t.GetInt("how-many-pugs"); err == nil {
-	log.Println(v)
+func main() {
+	settings, err := appsettings.NewAppSettings(
+		"appsettings.json",
+		appsettings.OptionPrettyPrint,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	user := settings.GetTree("user")
+
+	if theme, err := user.GetString("theme"); err == nil {
+		log.Printf("using %s theme", theme)
+	} else if errors.Is(err, appsettings.ErrUndefinedKey) {
+		user.SetString("theme", "system")
+	} else {
+		log.Fatal(err)
+	}
+
+	user.SetInt("window-width", 1280)
+	log.Printf("launch %d", user.IncrInt64("launch-count"))
+
+	if err := settings.Persist(); err != nil {
+		log.Fatal(err)
+	}
 }
-
-if v, err = t.GetString("pizza"); err == nil {
-	log.Println(v)
-}
-
-s.Persist()
 ```
 
-## CLI Tool Installation
+`GetTree` returns a child tree and creates it when it does not already exist. Leaves are stored as strings; the integer setters convert their values to decimal strings and the integer getters parse them. `IncrInt64` and `DecrInt64` return the updated value; an undefined or non-integer value is initialized before changing it.
 
-### From Source
+Call `HasLeaf` or `HasTree` to check for a value or child tree without creating anything. Use `Delete` to remove a leaf and `DeleteTree` to remove a child tree.
 
-```bash
-$ go install github.com/donatj/appsettings/cmd/appsettings@latest
+## Persistence
+
+The default `FileSystemStorageAdapter` reads and writes the filename supplied to `NewAppSettings`. Changes stay in memory until `Persist` succeeds. Pass `OptionPrettyPrint` to write indented JSON instead of compact JSON.
+
+For another backing store, implement `StorageAdapter` and pass it with `OptionStorageAdapter`:
+
+```go
+settings, err := appsettings.NewAppSettings(
+	"settings-for-current-user",
+	appsettings.OptionStorageAdapter(adapter),
+)
 ```
 
-## Migration from v0.0.1
+An adapter's `Fetch` method should return `appsettings.ErrorEmptyFetch` when there is no saved state. This lets `NewAppSettings` return an initialized, empty store. Its `Persist` method receives the same name and the serialized JSON to save.
 
-The JSON format for the early Alpha changed. To migrate your existing data compatibly to the more modern format, you can use [jq](https://stedolan.github.io/jq/) and execute the following command, first replacing `{your-file}` with the path to your actual database file.
+## Command-line tool
 
-```bash
-jq '.Tree |= with_entries(.value = {Leaves: .value} ) | . + {Branches: .Tree} | del(.Tree)' < {your-file} > tmp && mv tmp {your-fie}
+Install the CLI with:
+
+```sh
+go install github.com/donatj/appsettings/cmd/appsettings@latest
 ```
 
-## Documentation
+The `-file` flag selects the JSON file and must appear before the subcommand. Paths use dots to traverse trees.
 
-Documentation can be found a godoc:
+```sh
+# Set one or more path/value pairs.
+appsettings -file ./settings.json set user.name Jesse user.theme dark
 
-https://godoc.org/github.com/donatj/appsettings
+# Print one or more values, one per line.
+appsettings -file ./settings.json get user.name user.theme
+
+# Remove one or more leaf values.
+appsettings -file ./settings.json delete user.theme
+```
+
+The CLI stores values as strings. `set` requires an even number of path/value arguments; `get` and `delete` operate on each path supplied.
+
+## Documentation and license
+
+See the [package documentation](https://pkg.go.dev/github.com/donatj/appsettings) for the complete API. This project is released under the [MIT License](LICENSE.md).
